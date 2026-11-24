@@ -24,7 +24,14 @@ android {
                 storeFile = file(System.getenv("NODROID_KEYSTORE_PATH"))
                 storePassword = System.getenv("NODROID_KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("NODROID_KEY_ALIAS")
-                keyPassword = System.getenv("NODROID_KEY_PASSWORD")
+                // PKCS12 keystores (keytool's default) do not support a key
+                // password different from the store password — keytool warns
+                // "Different store and key passwords not supported for PKCS12
+                // KeyStores. Ignoring user-specified -keypass value." The CI
+                // keystore is PKCS12, so the key password IS the store
+                // password; using NODROID_KEY_PASSWORD here fails signing
+                // with "Given final block not properly padded".
+                keyPassword = System.getenv("NODROID_KEYSTORE_PASSWORD")
             }
         }
     }
