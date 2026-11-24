@@ -134,3 +134,21 @@
    `CanvasViewModel` Undo/Redo buttons in MainActivity read `.value` without subscribing (now
    `collectAsState`); `ShareActivity` used API-33-only `getParcelableExtra<T>` (now the pre-33 call
    with `@Suppress("DEPRECATION")`); removed `fallbackToDestructiveMigration(false)` from Room builder.
+
+## CI run 1 — FAILED (2026-11-24 ~10:43 IST, run 45331714556, ~1 min)
+- Failed step: "Pure JVM tests" (`gradle :core-model:test :core-engine:test`).
+- Root cause (from job log): `Failed to apply plugin 'org.jetbrains.kotlin.android'`
+  > "The 'org.jetbrains.kotlin.android' plugin is no longer required for Kotlin
+  > support since AGP 9.0" — AGP 9.3.1 enables built-in Kotlin by default and
+  > fatally rejects the kotlin-android plugin.
+- Research: official docs (developer.android.com/build/migrate-to-built-in-kotlin)
+  offer two paths: (a) migrate — remove kotlin-android plugin + migrate
+  kotlinOptions to kotlin.compilerOptions; (b) opt out with
+  `android.builtInKotlin=false` (documented AGP 9 opt-out, removed in AGP 10).
+  AGP 9.3.1 bundles KGP 2.2.10 (verified from its POM), so path (a) would also
+  force downgrading kotlin-compose/serialization/KSP from 2.4.20/2.3.14 to
+  2.2.x — unproven matrix, several CI cycles of risk.
+- Fix chosen: path (b) — added `android.builtInKotlin=false` and
+  `android.newDsl=false` to gradle.properties. This is the exact NexTv-proven
+  combo in this workspace (same AGP 9.3.1 + Kotlin 2.4.20 + KSP 2.3.14, CI-green).
+  Built-in Kotlin migration deferred to a later AGP 10 readiness task.
