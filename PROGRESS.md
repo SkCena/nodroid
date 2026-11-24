@@ -168,3 +168,23 @@
   6 modules; removed both gradle.properties opt-outs (built-in Kotlin back on).
   kotlin-compose/serialization stay at 2.4.20, KSP 2.3.14 — if the next run
   reports a KGP version mismatch vs AGP's bundled 2.2.10, align versions then.
+
+## CI run 3 — FAILED at Android unit tests (2026-11-24 ~10:57 IST, run 45336765563)
+- Progress: "Pure JVM tests" PASSED — the built-in Kotlin migration works.
+- New failures: `:feature-canvas:compileDebugKotlin` + `:core-nodes:compileDebugKotlin`.
+- Root causes (real code bugs the local kotlinc gate missed — Android modules were
+  only ever compiled by inspection):
+  1. CanvasScreen.kt imports `dev.nodroid.nodes.NodeDescriptors` but
+     feature-canvas had no `:core-nodes` project dependency. Fix: added
+     `implementation(project(":core-nodes"))` to feature-canvas/build.gradle.kts.
+     (The `category`/`displayName` on MatchGroup errors were cascade noise from
+     the unresolved import; NodeDescriptor has both fields.)
+  2. `com.google.mlkit.vision.text.TextRecognizerOptions` does not exist.
+     Verified against the real artifacts (play-services-mlkit-text-recognition
+     19.0.1 + common 19.1.0 via javap): Latin options live at
+     `com.google.mlkit.vision.text.latin.TextRecognizerOptions` (has
+     DEFAULT_OPTIONS), Devanagari at
+     `com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions`,
+     both implement `TextRecognizerOptionsInterface`, and
+     `TextRecognition.getClient(TextRecognizerOptionsInterface)`. Fix: corrected
+     the import and typed `options` as TextRecognizerOptionsInterface.

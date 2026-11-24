@@ -22,6 +22,7 @@ kotlin {
 dependencies {
     implementation(project(":core-model"))
     implementation(project(":core-engine"))
+    implementation(project(":core-nodes"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)

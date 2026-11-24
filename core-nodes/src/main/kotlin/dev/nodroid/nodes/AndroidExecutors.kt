@@ -13,7 +13,8 @@ import android.net.Uri
 import android.os.Build
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.TextRecognizerOptions
+import com.google.mlkit.vision.text.TextRecognizerOptionsInterface
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions
 import dev.nodroid.database.RoomKvStore
 import dev.nodroid.engine.ExecutionContext
@@ -40,7 +41,7 @@ class AndroidNodeExecutors(private val context: Context) {
         require(uriString.isNotBlank()) { "OCR image URI is blank" }
         val script = ctx.cfg("script", "latin")
         val bitmap = loadBitmap(uriString)
-        val options = if (script == "devanagari") {
+        val options: TextRecognizerOptionsInterface = if (script == "devanagari") {
             DevanagariTextRecognizerOptions.Builder().build()
         } else {
             TextRecognizerOptions.DEFAULT_OPTIONS
