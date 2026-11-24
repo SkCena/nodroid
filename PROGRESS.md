@@ -152,3 +152,19 @@
   `android.newDsl=false` to gradle.properties. This is the exact NexTv-proven
   combo in this workspace (same AGP 9.3.1 + Kotlin 2.4.20 + KSP 2.3.14, CI-green).
   Built-in Kotlin migration deferred to a later AGP 10 readiness task.
+
+## CI run 2 — FAILED (2026-11-24 ~10:49 IST, run 45335983509, ~1 min)
+- Failed step: "Pure JVM tests" again, at script compilation of app/build.gradle.kts.
+- Log evidence: `android.builtInKotlin=false` DID work (no more "plugin no longer
+  required" error) but the build died on Kotlin DSL deprecations:
+  - `e:` (hard error) `var jvmTarget: String` is deprecated — must migrate to
+    compilerOptions DSL (https://kotl.in/u1r8ln).
+  - `w:` `fun Project.android(...)` deprecated + `w:` kotlinOptions fn deprecated.
+  - AGP itself warns both opt-out flags are deprecated and advises removing them.
+- Fix: FULL official migration (developer.android.com/build/migrate-to-built-in-kotlin):
+  removed `org.jetbrains.kotlin.android` from root + all 6 Android modules +
+  libs.versions.toml; replaced `kotlinOptions { jvmTarget = "17" }` with
+  top-level `kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }` in all
+  6 modules; removed both gradle.properties opt-outs (built-in Kotlin back on).
+  kotlin-compose/serialization stay at 2.4.20, KSP 2.3.14 — if the next run
+  reports a KGP version mismatch vs AGP's bundled 2.2.10, align versions then.
