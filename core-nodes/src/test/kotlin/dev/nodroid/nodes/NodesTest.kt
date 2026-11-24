@@ -15,8 +15,54 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import dev.nodroid.model.Node
+import java.io.File
+import java.nio.file.Files
 
 class NodesTest {
+    companion object {
+        /**
+         * Host-JVM unit tests resolve quickjs-kt's Android variant, whose native
+         * loader can only System.loadLibrary() — there is no libquickjs on a
+         * desktop JVM, so the JS test would die with UnsatisfiedLinkError.
+         * The JVM artifact (testImplementation) ships the real desktop
+         * libquickjs.so as a classpath resource (jni/<os>_<arch>/libquickjs.so).
+         * Extract it once and point the loader at it via its documented system
+         * properties, so the test exercises the real QuickJS engine. On a real
+         * Android device this setup is never used — the Android loader path
+         * applies there and these properties are unset.
+         */
+        init {
+            val os = System.getProperty("os.name").lowercase()
+            val arch = System.getProperty("os.arch").lowercase()
+            val folder = when {
+                os.contains("linux") && (arch == "amd64" || arch == "x86_64") -> "linux_x64"
+                os.contains("linux") && arch == "aarch64" -> "linux_aarch64"
+                (os.contains("mac") || os.contains("osx")) && arch == "aarch64" -> "macos_aarch64"
+                os.contains("mac") || os.contains("osx") -> "macos_x64"
+                os.contains("windows") -> "windows_x64"
+                else -> null
+            }
+            if (folder != null) {
+                val libFileName = when {
+                    folder.startsWith("windows") -> "libquickjs.dll"
+                    folder.startsWith("macos") -> "libquickjs.dylib"
+                    else -> "libquickjs.so"
+                }
+                val resource = "jni/$folder/$libFileName"
+                val stream = NodesTest::class.java.classLoader?.getResourceAsStream(resource)
+                if (stream != null) {
+                    val dir = Files.createTempDirectory("nodroid-quickjs").toFile()
+                    dir.deleteOnExit()
+                    val file = File(dir, libFileName)
+                    stream.use { input -> file.outputStream().use { output -> input.copyTo(output) } }
+                    file.deleteOnExit()
+                    System.setProperty("com.dokar.quickjs.library.path", dir.absolutePath)
+                    System.setProperty("com.dokar.quickjs.library.name", libFileName)
+                }
+            }
+        }
+    }
+
     private val server = MockWebServer()
 
     @Before fun setUp() { server.start() }

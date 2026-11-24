@@ -33,4 +33,9 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Host-JVM unit tests resolve quickjs-kt's Android variant, whose loader can
+    // only System.loadLibrary() (unavailable on a desktop JVM). The JVM artifact
+    // ships the desktop libquickjs.so as a classpath resource; NodesTest extracts
+    // it and points the loader at it via the documented system properties.
+    testImplementation(libs.quickjs.kt.jvm)
 }
