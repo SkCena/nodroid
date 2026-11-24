@@ -58,6 +58,10 @@ dependencies {
     implementation(project(":core-engine"))
     implementation(project(":core-database"))
     implementation(project(":core-security"))
+    // RoomDatabase is a supertype of AppDatabase, used directly by NodRoidApp
+    // and MainActivity; :core-database declares Room as implementation, so it
+    // is not visible here.
+    implementation(libs.androidx.room.runtime)
     implementation(project(":core-nodes"))
     implementation(project(":feature-canvas"))
     implementation(project(":feature-runtime"))

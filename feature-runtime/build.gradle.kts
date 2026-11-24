@@ -28,6 +28,9 @@ dependencies {
     implementation(project(":core-engine"))
     implementation(project(":core-database"))
     implementation(project(":core-security"))
+    // RoomDatabase is a supertype of AppDatabase, used directly by RuntimeHolder;
+    // :core-database declares Room as implementation, so it is not visible here.
+    implementation(libs.androidx.room.runtime)
     implementation(project(":core-nodes"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.work.runtime.ktx)
